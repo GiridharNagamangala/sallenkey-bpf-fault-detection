@@ -1,18 +1,19 @@
 %% Training Classifier using Monte Carlo Analysis data
 
-data = load("monte_carlo_results.mat");
-whos('-file', 'monte_carlo_results.mat'); % Just to look at the data structs
+data = load("monte_carlo_results_faultfree.mat");
+whos('-file', 'monte_carlo_results_faultfree.mat'); % Just to look at the data structs
 
 % Declare separate variables so as to not tamper with the .mat
 VoutTransient = data.Vout_transient;
 VoutACreal = data.Vout_AC_real;
 VoutACimag = data.Vout_AC_imag;
-VoutACmag = data.Vout_AC_mag;
+IsupplyACreal = data.Isupply_AC_real;
+IsupplyACimag = data.Isupply_AC_imag;
 time = data.time_points;
 freq = data.freq_points;
 
 numRuns = size(VoutTransient, 2); % Inspecting data
-any(isnan(VoutTransient(:))) || any(isnan(VoutACreal(:))); % Checking for missing values
+any(isnan(VoutTransient(:))) || any(isnan(VoutACreal(:))) % Checking for missing values
 
 % ----- Feature extraction -----
 Feature1 = max(abs(VoutACreal), [], 1).';   % (200x1) Max peak of real output voltage
@@ -27,17 +28,18 @@ features = table(Feature1, Feature2, Feature3, Feature4, Feature5, Feature6);
 
 % If you have labels (e.g., good/bad runs), add them here
 % Example dummy labels:
-labels = [repmat("F0",200,1);
-          repmat("F1",200,1);
-          repmat("F2",200,1);
-          repmat("F3",200,1);
-          repmat("F4",200,1);
-          repmat("F5",200,1);
-          repmat("F6",200,1);
-          repmat("F7",200,1);
-          repmat("F8",200,1);
-          repmat("F9",200,1);
-          repmat("F10",200,1)];
+labels = [repmat("F0",200,1)];
+          % repmat("F1",200,1);
+          % repmat("F2",200,1);
+          % repmat("F3",200,1);
+          % repmat("F4",200,1);
+          % repmat("F5",200,1);
+          % repmat("F6",200,1);
+          % repmat("F7",200,1);
+          % repmat("F8",200,1);
+          % repmat("F9",200,1);
+          % repmat("F10",200,1)];
+          % To be added for further fault classes
 features.Label = categorical(labels);
 
 

@@ -1,86 +1,94 @@
-%% Monte Carlo Analysis Script for Circuit
-
+%% Monte Carlo Analysis Script for Circuit (Final Integrated Version with I_supply Placeholder)
 % Clear workspace and command window
 clear; clc;
 
 %% 1. User Inputs
-
-% Ask user for lower and upper cutoff frequencies
 f_low = input('Enter lower cutoff frequency (Hz): ');
 f_high = input('Enter upper cutoff frequency (Hz): ');
-
-% Number of Monte Carlo runs
 N = input('Enter number of Monte Carlo runs: ');
 
 %% 2. Define nominal values of resistors and capacitors
-
-% Nominal resistor values in Ohms
-R1_nom = input('Enter LPF stage resistance value (R1): ');
-R2_nom = input('Enter HPF stage resistance value (R2): ');
-R3_nom = input('Enter noninverting feedback resistance value (R3): ');
-R4_nom = input('Enter inverting feedback resistance divider value (R4): ');
-R5_nom = input('Enter inverting feedback resistance value (R5): ');
-
-% Nominal capacitor values in Farads
-C1_nom = input('Enter LPF stage capacitance value (C1): ');
-C2_nom = input('Enter HPF stage capacitance value (C2): ');
-
-% Define percentage tolerance for Monte Carlo (e.g., 5%)
-tol = input('Enter tolerance as a decimal: ');  % 5%
+R1_nom = input('Enter LPF stage resistance value (R1): ');   % 1 kOhm
+R2_nom = input('Enter HPF stage resistance value (R2): ');   % 3 kOhm
+R3_nom = input('Enter noninverting feedback resistance value (R3): ');   % 1 kOhm
+R4_nom = input('Enter inverting feedback resistance divider value (R4): ');   % 4 kOhm
+R5_nom = input('Enter inverting feedback resistance value (R5): ');   % 4 kOhm
+C1_nom = input('Enter LPF stage capacitance value (C1): ');  % 5 nF
+C2_nom = input('Enter HPF stage capacitance value (C2): ');  % 5 nF
+tolR = 0.10;
+tolC = 0.15;
 
 %% 3. Prepare storage for Monte Carlo results
+time_points = 0:1e-5:0.01; 
+freq_points = logspace(log10(f_low), log10(f_high), 500); 
 
-% Preallocate matrices for transient and AC responses
-% Assuming you simulate voltage at a node, e.g., Vout
-time_points = 0:1e-5:0.01; % time vector for transient simulation
-freq_points = logspace(log10(f_low), log10(f_high), 500); % frequency vector for AC
 Vout_transient = zeros(length(time_points), N);
 Vout_AC_real = zeros(length(freq_points), N);
 Vout_AC_imag = zeros(length(freq_points), N);
-Vout_AC_mag = zeros(length(freq_points), N);
-
-%% 4. Define transfer function (Extract real and imaginary parts)
-
-% s = tf('s'); for Laplace variable
-% Omega vector from frequency
-omega = 2*pi*freq_points;
-
-% SK-BPF transfer function
-function H = sktf (R1, R2, R3, R4, R5, C1, C2)
-    s = tf('s');
-    K = 1 + (R5/R4);
-    H = (s * K) / ((s^2)+(s*((1/(R1*C1))+(1/(R3*C1))+(1/R3*C2)+((1-K)/(R2*C1))))+((R1 + R2)/(R1*R2*R3*C1*C2)));
-end
+Isupply_AC_real = zeros(length(freq_points), N);
+Isupply_AC_imag = zeros(length(freq_points), N);
 
 %% 5. Monte Carlo simulation
-
 for k = 1:N
-    % Generate random resistor and capacitor values within tolerance
-    R1 = R1_nom*(1 + tol*(2*rand()-1));
-    R2 = R2_nom*(1 + tol*(2*rand()-1));
-    R3 = R3_nom*(1 + tol*(2*rand()-1));
-    R4 = R4_nom*(1 + tol*(2*rand()-1));
-    R5 = R5_nom*(1 + tol*(2*rand()-1));
+    % Generate random component values within tolerance
+    R1 = R1_nom*(1 + tolR*randn());
+    R2 = R2_nom*(1 + tolR*randn());
+    R3 = R3_nom*(1 + tolR*randn());
+    R4 = R4_nom*(1 + tolR*randn());
+    R5 = R5_nom*(1 + tolR*randn());
+    C1 = C1_nom*(1 + tolC*randn());
+    C2 = C2_nom*(1 + tolR*randn());
     
-    C1 = C1_nom*(1 + tol*(2*rand()-1));
-    C2 = C2_nom*(1 + tol*(2*rand()-1));
+    % --- Vout AC simulation ---
+    H_Vout_rand = sktf(R1, R2, R3, R4, R5, C1, C2);
+    H_jw_Vout = freqresp(H_Vout_rand, 2*pi*freq_points);
+    Vout_AC_complex = squeeze(H_jw_Vout); 
     
-    % Substitute the random values into the transfer function
-    H_rand = sktf(R1, R2, R3, R4, R5, C1, C2);
+    Vout_AC_real(:,k) = real(Vout_AC_complex);
+    Vout_AC_imag(:,k) = imag(Vout_AC_complex);
     
-    % 5a. Transient simulation (step response)
-    [y_t, t] = step(H_rand, time_points);
-    y_t = y_t(1:length(time_points));  % ensure matching length
+    % --- Isupply AC Simulation (Using Placeholder Function) ---
+    H_Isupply_rand = skIsupply_placeholder(R1, R2, R3, R4, R5, C1, C2);
+    H_jw_Isupply = freqresp(H_Isupply_rand, 2*pi*freq_points);
+    Isupply_AC_complex = squeeze(H_jw_Isupply); 
+    
+    Isupply_AC_real(:,k) = real(Isupply_AC_complex);
+    Isupply_AC_imag(:,k) = imag(Isupply_AC_complex);
+
+    % --- Transient simulation ---
+    [y_t, ~] = step(H_Vout_rand, time_points);
     Vout_transient(:,k) = y_t;
-    
-    % 5b. AC simulation (frequency response)
-    Hjw = squeeze(freqresp(H_rand, omega));  % complex vector
-    Vout_AC_real(:,k) = real(Hjw);
-    Vout_AC_imag(:,k) = imag(Hjw);
-    Vout_AC_mag(:,k)  = abs(Hjw);
 end
 
 %% 6. Save results
-save('monte_carlo_results.mat', 'Vout_transient', 'Vout_AC_real', 'Vout 'time_points', 'freq_points');
+save('monte_carlo_results_faultfree.mat', ...
+    'Vout_transient', ... 
+    'Vout_AC_real', 'Vout_AC_imag', ... 
+    'Isupply_AC_real', 'Isupply_AC_imag', ...
+    'time_points', 'freq_points');
+disp('Monte Carlo analysis complete. Results saved to monte_carlo_results_final.mat');
 
-disp('Monte Carlo analysis complete. Results saved to monte_carlo_results.mat');
+% --------------------------------------------------------------------------
+% Local Functions MUST be defined at the end of the script file
+% --------------------------------------------------------------------------
+
+%% 4a. Define Vout Transfer Function (SK-BPF H(s))
+function H = sktf (R1, R2, R3, R4, R5, C1, C2)
+    s = tf('s');
+    K = 1 + (R5/R4);
+    H = (s * K) / ((s^2)+(s*((1/(R1*C1))+(1/(R3*C1))+(1/(R3*C2))+((1-K)/(R2*C1))))+((R1 + R2)/(R1*R2*R3*C1*C2)));
+end
+
+%% 4b. Define Placeholder Isupply Transfer Function
+function H_I = skIsupply_placeholder (R1, R2, R3, R4, R5, C1, C2)
+    s = tf('s');
+    K = 1 + (R5/R4);
+    
+    % Denominator D(s) is the same as for Vout (shared poles)
+    D_s = (s^2)+(s*((1/(R1*C1))+(1/(R3*C1))+(1/(R3*C2))+((1-K)/(R2*C1))))+((R1 + R2)/(R1*R2*R3*C1*C2));
+    
+    % Placeholder Numerator N_I(s): s*C1 gives a stable, current-like behavior.
+    N_I_s = s * C1; 
+    
+    H_I = N_I_s / D_s;
+end

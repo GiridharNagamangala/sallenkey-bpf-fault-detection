@@ -15,7 +15,8 @@ R4_nom = input('Enter inverting feedback resistance divider value (R4): ');   % 
 R5_nom = input('Enter inverting feedback resistance value (R5): ');   % 4 kOhm
 C1_nom = input('Enter LPF stage capacitance value (C1): ');  % 5 nF
 C2_nom = input('Enter HPF stage capacitance value (C2): ');  % 5 nF
-tol = 0.05;
+tolR = 0.10; % Resistance tolerance of 10%
+tolC = 0.15; % Capacitance tolerance of 15%
 
 %% 3. Prepare storage for Monte Carlo results
 time_points = 0:1e-5:0.01; 
@@ -30,13 +31,14 @@ Isupply_AC_imag = zeros(length(freq_points), N);
 %% 5. Monte Carlo simulation
 for k = 1:N
     % Generate random component values within tolerance
-    R1 = R1_nom*(1 + tol*randn());
-    R2 = R2_nom*(1 + tol*randn());
-    R3 = R3_nom*(1 + tol*randn());
-    R4 = R4_nom*(1 + tol*randn());
-    R5 = R5_nom*(1 + tol*randn());
-    C1 = C1_nom*(1 + tol*randn());
-    C2 = C2_nom*(1 + tol*randn());
+    % To be changed to 1 + tol + (0.5 - tol) * randn() for faulty class
+    R1 = R1_nom*(1 + tolR*(2*rand() - 1));
+    R2 = R2_nom*(1 + tolR*(2*rand() - 1));
+    R3 = R3_nom*(1 + tolR*(2*rand() - 1));
+    R4 = R4_nom*(1 + tolR*(2*rand() - 1));
+    R5 = R5_nom*(1 + tolR*(2*rand() - 1));
+    C1 = C1_nom*(1 + tolC*(2*rand() - 1));
+    C2 = C2_nom*(1 + tolC*(2*rand() - 1));
     
     % --- Vout AC simulation ---
     H_Vout_rand = sktf(R1, R2, R3, R4, R5, C1, C2);
@@ -60,7 +62,7 @@ for k = 1:N
 end
 
 %% 6. Save results
-save('monte_carlo_results_final.mat', ...
+save('monte_carlo_results_faultfree.mat', ...
     'Vout_transient', ... 
     'Vout_AC_real', 'Vout_AC_imag', ... 
     'Isupply_AC_real', 'Isupply_AC_imag', ...
