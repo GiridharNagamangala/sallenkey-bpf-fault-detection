@@ -1,47 +1,79 @@
-%% Training Classifier using Monte Carlo Analysis data
+%% Build combined feature table from multiple Monte Carlo result files (preallocated)
+clc; clear;
 
-data = load("monte_carlo_results_faultfree.mat");
-whos('-file', 'monte_carlo_results_faultfree.mat'); % Just to look at the data structs
+files = dir('mc_F*.mat');
+numFiles = numel(files);
 
-% Declare separate variables so as to not tamper with the .mat
-VoutTransient = data.Vout_transient;
-VoutACreal = data.Vout_AC_real;
-VoutACimag = data.Vout_AC_imag;
-IsupplyACreal = data.Isupply_AC_real;
-IsupplyACimag = data.Isupply_AC_imag;
-time = data.time_points;
-freq = data.freq_points;
+if numFiles == 0
+    error('No mc_F*.mat files found in current folder.');
+end
 
-numRuns = size(VoutTransient, 2); % Inspecting data
-any(isnan(VoutTransient(:))) || any(isnan(VoutACreal(:))) % Checking for missing values
+fprintf('Found %d files.\n', numFiles);
 
-% ----- Feature extraction -----
-Feature1 = max(abs(VoutACreal), [], 1).';   % (200x1) Max peak of real output voltage
-Feature2 = max(abs(VoutACimag), [], 1).';   % (200x1) Max peak of imag output voltage
-Feature3 = min(VoutACimag, [], 1).';        % (200x1) Min peak (negative) of imag output voltage
-Feature4 = max(abs(IsupplyACreal), [], 1).';% (200x1) Max peak of real supply current
-Feature5 = max(abs(IsupplyACimag), [], 1).';% (200x1) Max peak of imag supply current
-Feature6 = min(IsupplyACimag, [], 1).';     % (200x1) Min peak of imag supply current
+% --- Step 1: Get number of Monte Carlo runs from the first file ---
+tmp = load(files(1).name);
+numRunsPerFile = size(tmp.Vout_AC_real, 2);
+fprintf('Each file has %d Monte Carlo runs.\n', numRunsPerFile);
 
-% Combine into table
-features = table(Feature1, Feature2, Feature3, Feature4, Feature5, Feature6);
+% --- Step 2: Preallocate numeric arrays ---
+totalRuns = numFiles * numRunsPerFile;
 
-% If you have labels (e.g., good/bad runs), add them here
-% Example dummy labels:
-labels = [repmat("F0",200,1)];
-          % repmat("F1",200,1);
-          % repmat("F2",200,1);
-          % repmat("F3",200,1);
-          % repmat("F4",200,1);
-          % repmat("F5",200,1);
-          % repmat("F6",200,1);
-          % repmat("F7",200,1);
-          % repmat("F8",200,1);
-          % repmat("F9",200,1);
-          % repmat("F10",200,1)];
-          % To be added for further fault classes
-features.Label = categorical(labels);
+Feature1 = zeros(totalRuns, 1);
+Feature2 = zeros(totalRuns, 1);
+Feature3 = zeros(totalRuns, 1);
+Feature4 = zeros(totalRuns, 1);
+Feature5 = zeros(totalRuns, 1);
+Feature6 = zeros(totalRuns, 1);
+Labels   = strings(totalRuns, 1);
 
+rowIdx = 1;
 
-% Save for Classification Learner
-save('features_table.mat', 'features');
+% --- Step 3: Loop through files ---
+for k = 1:numFiles
+    fname = files(k).name;
+    fprintf('\nProcessing %s...\n', fname);
+    data = load(fname);
+
+    VoutACreal    = data.Vout_AC_real;
+    VoutACimag    = data.Vout_AC_imag;
+    IsupplyACreal = data.Isupply_AC_real;
+    IsupplyACimag = data.Isupply_AC_imag;
+    n = size(VoutACreal, 2);
+
+    % Compute features for all runs in this file
+    f1 = max(abs(VoutACreal), [], 1).';
+    f2 = max(abs(VoutACimag), [], 1).';
+    f3 = min(VoutACimag, [], 1).';
+    f4 = max(abs(IsupplyACreal), [], 1).';
+    f5 = max(abs(IsupplyACimag), [], 1).';
+    f6 = min(IsupplyACimag, [], 1).';
+
+    % Extract label from filename (e.g. monte_carlo_results_F3.mat → F3)
+    tokens = regexp(fname, 'mc_(F\d+)', 'tokens');
+    faultLabel = tokens{1}{1}; % e.g. 'F3'
+
+    % Assign into preallocated arrays
+    idxRange = rowIdx:(rowIdx + n - 1);
+
+    Feature1(idxRange) = f1;
+    Feature2(idxRange) = f2;
+    Feature3(idxRange) = f3;
+    Feature4(idxRange) = f4;
+    Feature5(idxRange) = f5;
+    Feature6(idxRange) = f6;
+    Labels(idxRange)   = faultLabel;
+
+    rowIdx = rowIdx + n;
+
+    fprintf('   Added %d runs for %s.\n', n, faultLabel);
+end
+
+% --- Step 4: Create final table ---
+features_all = table(Feature1, Feature2, Feature3, Feature4, Feature5, Feature6);
+features_all.Label = categorical(Labels);
+
+fprintf('\n Final feature table has %d rows and %d columns.\n', ...
+        height(features_all), width(features_all));
+
+save('features_all.mat', 'features_all');
+disp('Saved features_all.mat ready for Classification Learner.');

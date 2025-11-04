@@ -1,5 +1,0 @@
-%% Training Classifier using Monte Carlo Analysis data
-
-data = load("monte_carlo_results.mat");
-whos('-file', 'monte_carlo_results.mat') % Just to look at the data structs
-numRuns = size(Vout_transient, 2); % Insp
