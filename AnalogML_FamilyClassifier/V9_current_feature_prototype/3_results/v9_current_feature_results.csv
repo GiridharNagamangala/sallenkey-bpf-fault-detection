@@ -1,0 +1,5 @@
+ResponseType,NumSamples,FineTreeAccuracy,BestKNNAccuracy,BestKNNDetails,BestBaggedTreesAccuracy,BestBaggedTreesDetails,BestModel,BestModelDetails,BestAccuracy
+BPF,800,100,100,"k=1, distance=euclidean, weight=equal",100,"Cycles=100, MinLeaf=1, MaxSplits=100",FineTree,"MaxNumSplits=500, MinLeafSize=1",100
+BSF,800,99.5,100,"k=1, distance=cityblock, weight=equal",99.875,"Cycles=100, MinLeaf=1, MaxSplits=500",OptimizedKNN,"k=1, distance=cityblock, weight=equal",100
+HPF,800,100,100,"k=1, distance=euclidean, weight=equal",100,"Cycles=100, MinLeaf=1, MaxSplits=100",FineTree,"MaxNumSplits=500, MinLeafSize=1",100
+LPF,800,100,99.625,"k=1, distance=euclidean, weight=equal",100,"Cycles=100, MinLeaf=1, MaxSplits=100",FineTree,"MaxNumSplits=500, MinLeafSize=1",100

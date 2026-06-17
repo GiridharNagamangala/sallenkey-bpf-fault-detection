@@ -1,0 +1,5 @@
+ResponseType,NumSamples,FineTreeAccuracy,BestKNNAccuracy,BestKNNDetails,BestBaggedTreesAccuracy,BestBaggedTreesDetails,BestModel,BestModelDetails,BestAccuracy
+BPF,861,97.6771196283391,98.9547038327526,"k=5, distance=cosine, weight=inverse",98.4901277584204,"Cycles=100, MinLeaf=1, MaxSplits=250",OptimizedKNN,"k=5, distance=cosine, weight=inverse",98.9547038327526
+BSF,527,81.7836812144213,68.1214421252372,"k=1, distance=cityblock, weight=equal",88.8045540796964,"Cycles=200, MinLeaf=1, MaxSplits=100",OptimizedBaggedTrees,"Cycles=200, MinLeaf=1, MaxSplits=100",88.8045540796964
+HPF,710,99.0140845070423,100,"k=1, distance=euclidean, weight=equal",99.4366197183099,"Cycles=100, MinLeaf=2, MaxSplits=100",OptimizedKNN,"k=1, distance=euclidean, weight=equal",100
+LPF,702,86.6096866096866,83.9031339031339,"k=5, distance=euclidean, weight=inverse",91.3105413105413,"Cycles=200, MinLeaf=1, MaxSplits=250",OptimizedBaggedTrees,"Cycles=200, MinLeaf=1, MaxSplits=250",91.3105413105413
