@@ -1,0 +1,5 @@
+ResponseType,NumSamples,FineTreeAccuracy,BestKNNAccuracy,BestKNNDetails,BestBaggedTreesAccuracy,BestBaggedTreesDetails,BestModel,BestModelDetails,BestAccuracy
+BPF,800,65.625,75.5,"k=15, distance=cityblock, weight=equal",76.125,"Cycles=300, MinLeaf=1, MaxSplits=500",OptimizedBaggedTrees,"Cycles=300, MinLeaf=1, MaxSplits=500",76.125
+BSF,800,41.25,45.25,"k=5, distance=cityblock, weight=squaredinverse",51.75,"Cycles=300, MinLeaf=1, MaxSplits=250",OptimizedBaggedTrees,"Cycles=300, MinLeaf=1, MaxSplits=250",51.75
+HPF,800,85.625,91,"k=10, distance=cityblock, weight=inverse",91.875,"Cycles=200, MinLeaf=2, MaxSplits=250",OptimizedBaggedTrees,"Cycles=200, MinLeaf=2, MaxSplits=250",91.875
+LPF,800,83.875,87.375,"k=5, distance=cityblock, weight=equal",86.75,"Cycles=200, MinLeaf=1, MaxSplits=250",OptimizedKNN,"k=5, distance=cityblock, weight=equal",87.375

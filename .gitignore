@@ -1,0 +1,14 @@
+﻿# MATLAB temporary files
+*.asv
+*.autosave
+*.mlx.bak
+slprj/
+*.slxc
+
+# Large MATLAB binary files
+*.mat
+*.fig
+
+# OS files
+.DS_Store
+Thumbs.db
